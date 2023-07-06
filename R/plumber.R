@@ -1,5 +1,5 @@
 #* @get /fundingrequired
-featherAPI <- function() {
+fundingrequired <- function() {
   
   env.txt <- readLines(".env")
   process.env.BTCPAY_API_KEY <- gsub("(BTCPAY_API_KEY=)|( )", "", env.txt[grepl("BTCPAY_API_KEY=", env.txt)])
@@ -7,7 +7,12 @@ featherAPI <- function() {
   process.env.BTCPAY_STORE_ID <- gsub("(BTCPAY_STORE_ID=)|( )", "", env.txt[grepl("BTCPAY_STORE_ID=", env.txt)])
   process.env.STRIPE_SECRET_KEY <- gsub("(STRIPE_SECRET_KEY=)|( )", "", env.txt[grepl("STRIPE_SECRET_KEY=", env.txt)])
 
-  projects.json <- RJSONIO::fromJSON("https://monerofund.org/_next/data/<INSERT>/projects.json")$pageProps$projects
+  monerofund.website <- readLines("https://monerofund.org/")
+  buildId <- regmatches(monerofund.website, regexpr("buildId\":\"[_0-9a-zA-Z]+", monerofund.website))
+  buildId <- gsub("buildId\":\"", "", buildId)
+  
+  projects.json <- RJSONIO::fromJSON(paste0(
+    "https://monerofund.org/_next/data/", buildId, "/projects.json"))$pageProps$projects
 
   needs.funding.index <- NULL
 
