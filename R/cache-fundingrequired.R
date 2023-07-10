@@ -86,7 +86,33 @@ cache.fundingrequired <- function() {
       }
     }
 
+    # Get donations to the static XMR address
+    for (i in seq_along(invoices)) {
+      static.slug <- paste0(slug, "_STATIC")
+      if ((!is.list(invoices[[i]]$metadata)) || invoices[[i]]$metadata$orderId != static.slug) {
+        next
+      }
+      id <- invoices[[i]]$id
+      dataiter.url <- paste0(process.env.BTCPAY_URL, "stores/", process.env.BTCPAY_STORE_ID, "/invoices/", id, "/payment-methods")
 
+      responseiter <- RCurl::getForm(dataiter.url,
+        .opts = list(httpheader = c(
+          "Content-Type" = "application/json",
+          Authorization = BTCPay.auth
+        ))
+      )
+
+      dataiter <- RJSONIO::fromJSON(responseiter, asText = TRUE)
+
+      for (j in seq_along(dataiter)) {
+        if (dataiter[[j]]$cryptoCode == "XMR" && as.numeric(dataiter[[j]]$paymentMethodPaid) > 0) {
+          numdonationsxmr <- numdonationsxmr + length(dataiter[[j]]$payments)
+          totaldonationsxmr <- totaldonationsxmr + as.numeric(dataiter[[j]]$paymentMethodPaid)
+          totaldonationsinfiatxmr <- totaldonationsinfiatxmr + as.numeric(dataiter[[j]]$paymentMethodPaid) * as.numeric(dataiter[[j]]$rate)
+        }
+
+      }
+    }
 
 
     urlstripe <- "https://api.stripe.com/v1/charges"
