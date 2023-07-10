@@ -140,6 +140,7 @@ cache.fundingrequired <- function() {
     }
 
     title <- projects.json[[project.index]]$title
+    address <- projects.json[[project.index]]$staticXMRaddress
     author <- projects.json[[project.index]]$nym
     url <- paste0("https://monerofund.org/projects/", slug)
     target_amount <- round(projects.json[[1]]$goal / USD.to.XMR) # Round to nearest whole XMR
@@ -152,6 +153,7 @@ cache.fundingrequired <- function() {
 
     json.return[[length(json.return) + 1]] <- list(
       title = jsonlite::unbox(title),
+      address = jsonlite::unbox(address),
       author = jsonlite::unbox(author),
       url = jsonlite::unbox(url),
       target_amount = jsonlite::unbox(target_amount),
