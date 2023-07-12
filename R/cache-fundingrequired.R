@@ -140,6 +140,7 @@ cache.fundingrequired <- function() {
     }
 
     title <- projects.json[[project.index]]$title
+    date <- projects.json[[project.index]]$date
     address <- projects.json[[project.index]]$staticXMRaddress
     author <- projects.json[[project.index]]$nym
     url <- paste0("https://monerofund.org/projects/", slug)
@@ -153,6 +154,7 @@ cache.fundingrequired <- function() {
 
     json.return[[length(json.return) + 1]] <- list(
       title = jsonlite::unbox(title),
+      date = jsonlite::unbox(date),
       address = jsonlite::unbox(address),
       author = jsonlite::unbox(author),
       url = jsonlite::unbox(url),
