@@ -7,7 +7,7 @@ cache.fundingrequired <- function() {
   process.env.STRIPE_SECRET_KEY <- gsub("(STRIPE_SECRET_KEY=)|( )", "", env.txt[grepl("STRIPE_SECRET_KEY=", env.txt)])
 
   monerofund.website <- readLines("https://monerofund.org/")
-  buildId <- regmatches(monerofund.website, regexpr("buildId\":\"[_0-9a-zA-Z]+", monerofund.website))
+  buildId <- regmatches(monerofund.website, regexpr("buildId\":\"[-_0-9a-zA-Z]+", monerofund.website))
   buildId <- gsub("buildId\":\"", "", buildId)
   
   projects.json <- RJSONIO::fromJSON(paste0(
