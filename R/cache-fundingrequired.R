@@ -9,7 +9,7 @@ cache.fundingrequired <- function() {
   process.env.BTCPAY_STORE_ID <- gsub("(BTCPAY_STORE_ID=)|( )", "", env.txt[grepl("BTCPAY_STORE_ID=", env.txt)])
   process.env.STRIPE_SECRET_KEY <- gsub("(STRIPE_SECRET_KEY=)|( )", "", env.txt[grepl("STRIPE_SECRET_KEY=", env.txt)])
 
-  monerofund.website.text <-   tryCatch(readLines(monerofund.domain), error = function(e) {NULL})
+  monerofund.website.text <- tryCatch(readLines(monerofund.domain), error = function(e) {NULL})
   if (length(monerofund.website.text) == 0) {
     # If the monerofund website is unreachable, return an empty project list
     return("")
@@ -39,7 +39,26 @@ cache.fundingrequired <- function() {
     return("")
   }
 
-  USD.to.XMR <- RJSONIO::fromJSON("https://min-api.cryptocompare.com/data/pricemulti?fsyms=XMR&tsyms=USD")$XMR
+  USD.to.XMR <- tryCatch(
+    RJSONIO::fromJSON("https://min-api.cryptocompare.com/data/pricemulti?fsyms=XMR&tsyms=USD")$XMR,
+    error = function(e) {NULL})
+
+  if (length(USD.to.XMR) == 0) {
+    USD.to.XMR <- tryCatch(
+      as.numeric(RJSONIO::fromJSON("https://api.kraken.com/0/public/Ticker?pair=XMRUSD")$result$XXMRZUSD$a[1]),
+      error = function(e) {NULL})
+  }
+
+  if (length(USD.to.XMR) == 0) {
+    USD.to.XMR <- tryCatch(
+      RJSONIO::fromJSON("https://api.coingecko.com/api/v3/coins/monero?tickers=false&community_data=false&developer_data=false")$market_data$current_price["usd"],
+      error = function(e) {NULL})
+  }
+
+  if (length(USD.to.XMR) == 0) {
+    # If all exchange rate APIs are unreachable, return an empty project list
+    return("")
+  }
 
   json.return <- list()
 
