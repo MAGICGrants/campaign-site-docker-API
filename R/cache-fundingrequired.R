@@ -12,7 +12,8 @@ cache.fundingrequired <- function() {
   monerofund.website.text <- tryCatch(readLines(monerofund.domain), error = function(e) {NULL})
   if (length(monerofund.website.text) == 0) {
     # If the monerofund website is unreachable, return an empty project list
-    return("")
+    saveRDS(list(), file = "fundingrequiredJSON.rds")
+    return()
   }
   buildId <- regmatches(monerofund.website.text, regexpr("buildId\":\"[-_0-9a-zA-Z]+", monerofund.website.text))
   buildId <- gsub("buildId\":\"", "", buildId)
@@ -22,7 +23,8 @@ cache.fundingrequired <- function() {
     error = function(e) {NULL})
   if (length(projects.json) == 0) {
     # If the monerofund website is unreachable, return an empty project list
-    return("")
+    saveRDS(list(), file = "fundingrequiredJSON.rds")
+    return()
   }
 
   needs.funding.index <- NULL
@@ -36,7 +38,8 @@ cache.fundingrequired <- function() {
 
 
   if (length(needs.funding.index) == 0) {
-    return("")
+    saveRDS(list(), file = "fundingrequiredJSON.rds")
+    return()
   }
 
   USD.to.XMR <- tryCatch(
@@ -57,7 +60,8 @@ cache.fundingrequired <- function() {
 
   if (length(USD.to.XMR) == 0) {
     # If all exchange rate APIs are unreachable, return an empty project list
-    return("")
+    saveRDS(list(), file = "fundingrequiredJSON.rds")
+    return()
   }
 
   json.return <- list()
@@ -69,12 +73,20 @@ cache.fundingrequired <- function() {
 
     invoices.url <- paste0(process.env.BTCPAY_URL, "stores/", process.env.BTCPAY_STORE_ID, "/invoices")
 
-    invoices <- RCurl::getForm(invoices.url,
-      .opts = list(httpheader = c(
-        "Content-Type" = "application/json",
-        Authorization = BTCPay.auth
-      ))
-    )
+    invoices <- tryCatch(
+      RCurl::getForm(invoices.url,
+        .opts = list(httpheader = c(
+          "Content-Type" = "application/json",
+          Authorization = BTCPay.auth
+        ))
+      ),
+      error = function(e) {NULL})
+
+    if (length(invoices) == 0) {
+      # If BTCPay is unreachable, return an empty project list
+      saveRDS(list(), file = "fundingrequiredJSON.rds")
+      return()
+    }
 
     invoices <- RJSONIO::fromJSON(invoices, asText = TRUE)
 
@@ -92,12 +104,20 @@ cache.fundingrequired <- function() {
       id <- invoices[[i]]$id
       dataiter.url <- paste0(process.env.BTCPAY_URL, "stores/", process.env.BTCPAY_STORE_ID, "/invoices/", id, "/payment-methods")
 
-      responseiter <- RCurl::getForm(dataiter.url,
-        .opts = list(httpheader = c(
-          "Content-Type" = "application/json",
-          Authorization = BTCPay.auth
-        ))
-      )
+      responseiter <- tryCatch(RCurl::getForm(dataiter.url,
+          .opts = list(httpheader = c(
+            "Content-Type" = "application/json",
+            Authorization = BTCPay.auth
+          ))
+        ),
+        error = function(e) {NULL})
+
+      if (length(responseiter) == 0) {
+        # If BTCPay is unreachable, return an empty project list
+        saveRDS(list(), file = "fundingrequiredJSON.rds")
+        return()
+      }
+
 
       dataiter <- RJSONIO::fromJSON(responseiter, asText = TRUE)
 
@@ -125,12 +145,19 @@ cache.fundingrequired <- function() {
       id <- invoices[[i]]$id
       dataiter.url <- paste0(process.env.BTCPAY_URL, "stores/", process.env.BTCPAY_STORE_ID, "/invoices/", id, "/payment-methods")
 
-      responseiter <- RCurl::getForm(dataiter.url,
-        .opts = list(httpheader = c(
-          "Content-Type" = "application/json",
-          Authorization = BTCPay.auth
-        ))
-      )
+      responseiter <- tryCatch(RCurl::getForm(dataiter.url,
+          .opts = list(httpheader = c(
+            "Content-Type" = "application/json",
+            Authorization = BTCPay.auth
+          ))
+        ),
+        error = function(e) {NULL})
+
+      if (length(responseiter) == 0) {
+        # If BTCPay is unreachable, return an empty project list
+        saveRDS(list(), file = "fundingrequiredJSON.rds")
+        return()
+      }
 
       dataiter <- RJSONIO::fromJSON(responseiter, asText = TRUE)
 
@@ -148,12 +175,19 @@ cache.fundingrequired <- function() {
     urlstripe <- "https://api.stripe.com/v1/charges"
     authstripe <- paste0("Bearer ", process.env.STRIPE_SECRET_KEY)
 
-    responsestripe <- RCurl::getForm(urlstripe,
-      .opts = list(httpheader = c(
-        "Content-Type" = "application/json",
-        Authorization = authstripe
-      ))
-    )
+    responsestripe <- tryCatch(RCurl::getForm(urlstripe,
+        .opts = list(httpheader = c(
+          "Content-Type" = "application/json",
+          Authorization = authstripe
+        ))
+      ),
+      error = function(e) {NULL})
+
+    if (length(responsestripe) == 0) {
+      # If Stripe is unreachable, return an empty project list
+      saveRDS(list(), file = "fundingrequiredJSON.rds")
+      return()
+    }
 
     responsestripe <- RJSONIO::fromJSON(responsestripe, asText = TRUE)$data
 
@@ -197,6 +231,7 @@ cache.fundingrequired <- function() {
   }
 
   saveRDS(json.return, file = "fundingrequiredJSON.rds")
+  return()
 }
 
 
