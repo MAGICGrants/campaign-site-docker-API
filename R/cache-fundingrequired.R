@@ -1,4 +1,7 @@
 cache.fundingrequired <- function() {
+
+  monerofund.domain <- "https://monerofund.org/"
+  # Must have trailing "/"
   
   env.txt <- readLines(".env")
   process.env.BTCPAY_API_KEY <- gsub("(BTCPAY_API_KEY=)|( )", "", env.txt[grepl("BTCPAY_API_KEY=", env.txt)])
@@ -6,14 +9,24 @@ cache.fundingrequired <- function() {
   process.env.BTCPAY_STORE_ID <- gsub("(BTCPAY_STORE_ID=)|( )", "", env.txt[grepl("BTCPAY_STORE_ID=", env.txt)])
   process.env.STRIPE_SECRET_KEY <- gsub("(STRIPE_SECRET_KEY=)|( )", "", env.txt[grepl("STRIPE_SECRET_KEY=", env.txt)])
 
-  monerofund.website <- readLines("https://monerofund.org/")
-  buildId <- regmatches(monerofund.website, regexpr("buildId\":\"[-_0-9a-zA-Z]+", monerofund.website))
+  monerofund.website.text <-   tryCatch(readLines(monerofund.domain), error = function(e) {NULL})
+  if (length(monerofund.website.text) == 0) {
+    # If the monerofund website is unreachable, return an empty project list
+    return("")
+  }
+  buildId <- regmatches(monerofund.website.text, regexpr("buildId\":\"[-_0-9a-zA-Z]+", monerofund.website.text))
   buildId <- gsub("buildId\":\"", "", buildId)
   
-  projects.json <- RJSONIO::fromJSON(paste0(
-    "https://monerofund.org/_next/data/", buildId, "/projects.json"))$pageProps$projects
+  projects.json <- tryCatch(RJSONIO::fromJSON(paste0(
+    monerofund.domain, "_next/data/", buildId, "/projects.json"))$pageProps$projects,
+    error = function(e) {NULL})
+  if (length(projects.json) == 0) {
+    # If the monerofund website is unreachable, return an empty project list
+    return("")
+  }
 
   needs.funding.index <- NULL
+
 
   for (i in seq_along(projects.json)) {
     if (!projects.json[[i]]$isFunded) {
@@ -21,8 +34,6 @@ cache.fundingrequired <- function() {
     }
   }
 
-  ## TODO: DELETE BEFORE DEPLOYMENT
-  needs.funding.index <- 1
 
   if (length(needs.funding.index) == 0) {
     return("")
@@ -143,8 +154,8 @@ cache.fundingrequired <- function() {
     date <- projects.json[[project.index]]$date
     address <- projects.json[[project.index]]$staticXMRaddress
     author <- projects.json[[project.index]]$nym
-    url <- paste0("https://monerofund.org/projects/", slug)
-    target_amount <- round(projects.json[[1]]$goal / USD.to.XMR) # Round to nearest whole XMR
+    url <- paste0(monerofund.domain, "projects/", slug)
+    target_amount <- round(projects.json[[project.index]]$goal / USD.to.XMR) # Round to nearest whole XMR
     target_currency <- "XMR"
 
     raised_amount <- totaldonationsxmr + totaldonationsinfiatbtc / USD.to.XMR + totaldonationsinfiat / USD.to.XMR
