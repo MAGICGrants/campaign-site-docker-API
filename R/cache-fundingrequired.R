@@ -98,7 +98,7 @@ cache.fundingrequired <- function() {
     totaldonationsinfiatbtc <- 0
 
     for (i in seq_along(invoices)) {
-      if ((!is.list(invoices[[i]]$metadata)) || invoices[[i]]$metadata$orderId != slug) {
+      if (invoices[[i]]$metadata[["orderId"]] != slug) {
         next
       }
       id <- invoices[[i]]$id
@@ -139,7 +139,7 @@ cache.fundingrequired <- function() {
     # Get donations to the static XMR address
     for (i in seq_along(invoices)) {
       static.slug <- paste0(slug, "_STATIC")
-      if ((!is.list(invoices[[i]]$metadata)) || invoices[[i]]$metadata$orderId != static.slug) {
+      if ( invoices[[i]]$metadata[["orderId"]] != static.slug) {
         next
       }
       id <- invoices[[i]]$id
