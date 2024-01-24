@@ -31,7 +31,7 @@ cache.fundingrequired <- function() {
 
 
   for (i in seq_along(projects.json)) {
-    if (!projects.json[[i]]$isFunded) {
+    if ( grepl("^F", projects.json[[i]]$isFunded, ignore.case = TRUE) ) {
       needs.funding.index <- c(needs.funding.index, i)
     }
   }
